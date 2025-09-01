@@ -1,0 +1,97 @@
+{% extends "base.html" %} {% block title %}Sign Up - StudySauce{% endblock %} {%
+block content %}
+<div style="max-width: 500px; margin: 4rem auto">
+  <div class="card" style="padding: 2rem">
+    <h2 class="text-center mb-3">Create Your StudySauce Account</h2>
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+        <div class="form-group">
+          {{ form.first_name.label(class="form-label") }} {{
+          form.first_name(class="form-control", placeholder="First name") }} {%
+          if form.first_name.errors %}
+          <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+            {% for error in form.first_name.errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.last_name.label(class="form-label") }} {{
+          form.last_name(class="form-control", placeholder="Last name") }} {% if
+          form.last_name.errors %}
+          <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+            {% for error in form.last_name.errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        {{ form.username.label(class="form-label") }} {{
+        form.username(class="form-control", placeholder="Choose a username") }}
+        {% if form.username.errors %}
+        <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+          {% for error in form.username.errors %}
+          <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.email.label(class="form-label") }} {{
+        form.email(class="form-control", placeholder="Enter your email") }} {%
+        if form.email.errors %}
+        <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+          {% for error in form.email.errors %}
+          <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.password.label(class="form-label") }} {{
+        form.password(class="form-control", placeholder="Create a strong
+        password") }} {% if form.password.errors %}
+        <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+          {% for error in form.password.errors %}
+          <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.password2.label(class="form-label") }} {{
+        form.password2(class="form-control", placeholder="Confirm your
+        password") }} {% if form.password2.errors %}
+        <div style="color: #e74c3c; font-size: 0.875rem; margin-top: 0.25rem">
+          {% for error in form.password2.errors %}
+          <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.submit(class="btn btn-primary", style="width: 100%;") }}
+      </div>
+    </form>
+
+    <div class="text-center mt-3">
+      <p>
+        Already have an account?
+        <a href="{{ url_for('login') }}" style="color: #667eea">Sign in here</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
