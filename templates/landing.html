@@ -1,0 +1,122 @@
+{% extends "base.html" %} {% block title %}Welcome - StudySauce{% endblock %} {%
+block content %}
+<div class="text-center">
+  <h1
+    style="
+      color: white;
+      font-size: 4rem;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    "
+  >
+    StudySauce
+  </h1>
+  <p style="color: white; font-size: 1.5rem; margin-bottom: 3rem; opacity: 0.9">
+    Transform your PDFs into engaging podcasts with AI
+  </p>
+
+  <div
+    style="
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 4rem;
+    "
+  >
+    <a
+      href="{{ url_for('register') }}"
+      class="btn btn-primary"
+      style="font-size: 1.2rem; padding: 1rem 2rem"
+    >
+      Get Started Free
+    </a>
+    <a
+      href="{{ url_for('login') }}"
+      class="btn btn-secondary"
+      style="font-size: 1.2rem; padding: 1rem 2rem"
+    >
+      Sign In
+    </a>
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto; padding: 3rem">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #333">
+      How it Works
+    </h2>
+
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+      "
+    >
+      <div style="text-align: center">
+        <div
+          style="
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <span style="color: white; font-size: 2rem">📄</span>
+        </div>
+        <h3 style="margin-bottom: 0.5rem">Upload PDF</h3>
+        <p style="color: #666">Upload your study materials or documents</p>
+      </div>
+
+      <div style="text-align: center">
+        <div
+          style="
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <span style="color: white; font-size: 2rem">🤖</span>
+        </div>
+        <h3 style="margin-bottom: 0.5rem">AI Processing</h3>
+        <p style="color: #666">Our AI analyzes and creates engaging dialogue</p>
+      </div>
+
+      <div style="text-align: center">
+        <div
+          style="
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <span style="color: white; font-size: 2rem">🎧</span>
+        </div>
+        <h3 style="margin-bottom: 0.5rem">Listen & Learn</h3>
+        <p style="color: #666">Download your personalized podcast</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem">
+      <p style="color: #666; font-style: italic">
+        Join thousands of students already using StudySauce to enhance their
+        learning experience!
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

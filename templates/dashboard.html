@@ -1,0 +1,396 @@
+{% extends "base.html" %} {% block title %}Dashboard - StudySauce{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    "
+  >
+    <h1 style="color: white; font-size: 2.5rem">
+      Welcome back, {{ user.first_name }}!
+    </h1>
+    <a href="{{ url_for('profile') }}" class="btn btn-secondary"
+      >View Profile</a
+    >
+  </div>
+
+  <div class="card" style="padding: 2rem; margin-bottom: 2rem">
+    <h2 style="margin-bottom: 1.5rem; text-align: center">
+      Create New Podcast
+    </h2>
+
+    <div
+      class="upload-area"
+      onclick="document.getElementById('fileInput').click()"
+      style="
+        border: 2px dashed #ccc;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: border-color 0.3s;
+      "
+    >
+      <input
+        type="file"
+        id="fileInput"
+        accept=".pdf"
+        style="display: none"
+        onchange="showCustomization()"
+      />
+      <div style="font-size: 3rem; margin-bottom: 1rem">📄</div>
+      <p style="font-size: 1.2rem; margin-bottom: 0.5rem">
+        Click here to select a PDF file
+      </p>
+      <p style="font-size: 0.9em; color: #666">Maximum file size: 16MB</p>
+    </div>
+
+    <div
+      id="customizationPanel"
+      class="hidden"
+      style="
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 10px;
+        margin: 20px 0;
+      "
+    >
+      <h3>🎛️ Customize Your Podcast</h3>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin: 1.5rem 0;
+        "
+      >
+        <div class="form-group">
+          <label for="numHosts">Number of Hosts (1-4):</label>
+          <select
+            id="numHosts"
+            class="form-control"
+            onchange="updateHostSelection()"
+          >
+            <option value="1">1 Host</option>
+            <option value="2" selected>2 Hosts</option>
+            <option value="3">3 Hosts</option>
+            <option value="4">4 Hosts</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="numGuests">Number of Guests (0-3):</label>
+          <select
+            id="numGuests"
+            class="form-control"
+            onchange="updateHostSelection()"
+          >
+            <option value="0">No Guests</option>
+            <option value="1" selected>1 Guest</option>
+            <option value="2">2 Guests</option>
+            <option value="3">3 Guests</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastLength">Podcast Length:</label>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <input
+              type="range"
+              id="podcastLength"
+              min="3"
+              max="15"
+              value="10"
+              oninput="updateLengthDisplay()"
+              style="flex: 1"
+            />
+            <span
+              id="lengthValue"
+              style="font-weight: bold; color: #667eea; min-width: 80px"
+              >10 minutes</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Choose Your Hosts (optional):</label>
+        <div
+          id="hostsSelection"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+          "
+        >
+          <!-- Host checkboxes will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem">
+        <button
+          onclick="uploadFile()"
+          id="generateBtn"
+          class="btn btn-primary"
+          style="font-size: 1.1rem; padding: 0.75rem 2rem"
+        >
+          Generate Podcast 🎙️
+        </button>
+      </div>
+    </div>
+
+    <div id="progressSection" class="hidden" style="margin: 2rem 0">
+      <h3 style="text-align: center">Processing Your Podcast...</h3>
+      <div
+        style="
+          width: 100%;
+          height: 20px;
+          background: #f0f0f0;
+          border-radius: 10px;
+          overflow: hidden;
+          margin: 1rem 0;
+        "
+      >
+        <div
+          id="progressFill"
+          style="
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+          "
+        ></div>
+      </div>
+      <p id="statusText" style="text-align: center; color: #666">
+        Initializing...
+      </p>
+    </div>
+
+    <div
+      id="downloadSection"
+      class="hidden"
+      style="text-align: center; margin: 2rem 0"
+    >
+      <h3 style="color: #28a745; margin-bottom: 1rem">✅ Podcast Ready!</h3>
+      <button
+        id="downloadBtn"
+        onclick="downloadPodcast()"
+        class="btn btn-primary"
+        style="margin-bottom: 1rem"
+      >
+        Download Podcast 📥
+      </button>
+      <audio
+        id="audioPlayer"
+        controls
+        style="width: 100%; max-width: 500px; margin: 0 auto; display: block"
+      ></audio>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentTaskId = null;
+  const availableHosts = [
+    "Alex",
+    "Taylor",
+    "Jordan",
+    "Casey",
+    "Morgan",
+    "Riley",
+    "Dakota",
+    "Harper",
+    "Quinn",
+    "Reese",
+  ];
+
+  // Add hover effect to upload area
+  document
+    .querySelector(".upload-area")
+    .addEventListener("mouseenter", function () {
+      this.style.borderColor = "#667eea";
+      this.style.backgroundColor = "#f8f9ff";
+    });
+
+  document
+    .querySelector(".upload-area")
+    .addEventListener("mouseleave", function () {
+      this.style.borderColor = "#ccc";
+      this.style.backgroundColor = "transparent";
+    });
+
+  function showCustomization() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    if (file.size > 16 * 1024 * 1024) {
+      alert("File size must be less than 16MB");
+      return;
+    }
+
+    document.getElementById("customizationPanel").classList.remove("hidden");
+    updateHostSelection();
+  }
+
+  function updateHostSelection() {
+    const numHosts = parseInt(document.getElementById("numHosts").value);
+    const numGuests = parseInt(document.getElementById("numGuests").value);
+    const totalSpeakers = numHosts + numGuests;
+    const hostsContainer = document.getElementById("hostsSelection");
+
+    hostsContainer.innerHTML = `
+            <p style="grid-column: 1 / -1; font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                Select up to ${totalSpeakers} names (optional). If you select fewer, we'll randomly choose the rest.
+            </p>
+        `;
+
+    availableHosts.forEach((host) => {
+      const hostDiv = document.createElement("div");
+      hostDiv.style.display = "flex";
+      hostDiv.style.alignItems = "center";
+      hostDiv.innerHTML = `
+                <input type="checkbox" id="host_${host}" name="selectedHosts" value="${host}" 
+                       onchange="checkSelectionLimit(${totalSpeakers})" style="margin-right: 8px;">
+                <label for="host_${host}" style="margin: 0;">${host}</label>
+            `;
+      hostsContainer.appendChild(hostDiv);
+    });
+  }
+
+  function checkSelectionLimit(maxSelections) {
+    const selectedBoxes = document.querySelectorAll(
+      'input[name="selectedHosts"]:checked'
+    );
+    const allBoxes = document.querySelectorAll('input[name="selectedHosts"]');
+
+    if (selectedBoxes.length >= maxSelections) {
+      allBoxes.forEach((box) => {
+        if (!box.checked) {
+          box.disabled = true;
+        }
+      });
+    } else {
+      allBoxes.forEach((box) => {
+        box.disabled = false;
+      });
+    }
+  }
+
+  function updateLengthDisplay() {
+    const length = document.getElementById("podcastLength").value;
+    document.getElementById("lengthValue").textContent = length + " minutes";
+  }
+
+  function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("pdf", file);
+    formData.append("num_hosts", document.getElementById("numHosts").value);
+    formData.append("num_guests", document.getElementById("numGuests").value);
+    formData.append(
+      "podcast_length",
+      document.getElementById("podcastLength").value
+    );
+
+    const selectedHosts = Array.from(
+      document.querySelectorAll('input[name="selectedHosts"]:checked')
+    ).map((cb) => cb.value);
+    selectedHosts.forEach((host) => {
+      formData.append("selected_hosts[]", host);
+    });
+
+    document.getElementById("customizationPanel").classList.add("hidden");
+    document.getElementById("progressSection").classList.remove("hidden");
+    document.getElementById("downloadSection").classList.add("hidden");
+
+    fetch("/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.task_id) {
+          currentTaskId = data.task_id;
+          checkStatus();
+        } else {
+          alert("Upload failed: " + data.error);
+          resetInterface();
+        }
+      })
+      .catch((error) => {
+        alert("Upload failed: " + error);
+        resetInterface();
+      });
+  }
+
+  function checkStatus() {
+    if (!currentTaskId) return;
+
+    fetch(`/status/${currentTaskId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById("progressFill").style.width =
+          data.progress + "%";
+        document.getElementById("statusText").textContent = data.status;
+
+        if (data.progress >= 100 && data.download_url) {
+          document.getElementById("downloadSection").classList.remove("hidden");
+          document.getElementById("audioPlayer").src = data.download_url;
+
+          if (data.filename) {
+            document.getElementById("downloadBtn").onclick = function () {
+              window.location.href = `/download/${data.filename}`;
+            };
+          }
+        } else if (!data.error) {
+          setTimeout(checkStatus, 2000);
+        } else {
+          alert("Processing failed: " + data.status);
+          resetInterface();
+        }
+      })
+      .catch((error) => {
+        console.error("Status check failed:", error);
+        setTimeout(checkStatus, 5000);
+      });
+  }
+
+  function downloadPodcast() {
+    if (currentTaskId) {
+      window.location.href = `/download/${currentTaskId}`;
+    }
+  }
+
+  function resetInterface() {
+    document.getElementById("customizationPanel").classList.add("hidden");
+    document.getElementById("progressSection").classList.add("hidden");
+    document.getElementById("downloadSection").classList.add("hidden");
+    document.getElementById("fileInput").value = "";
+    currentTaskId = null;
+  }
+
+  // Initialize
+  updateHostSelection();
+</script>
+
+<style>
+  .hidden {
+    display: none !important;
+  }
+  .form-control {
+    width: 100%;
+  }
+</style>
+{% endblock %}

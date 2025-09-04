@@ -1,5 +1,10 @@
 Flask==2.3.3
 Flask-CORS==4.0.0
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.0.5
+Flask-Bcrypt==1.0.1
+Flask-WTF==1.1.1
+WTForms==3.0.1
 PyMuPDF==1.23.8
 pydub==0.25.1
 google-generativeai==0.3.2
@@ -8,3 +13,7 @@ elevenlabs==1.8.0
 Werkzeug==2.3.7
 python-dotenv==1.0.0
 gunicorn==21.2.0
+email-validator==2.0.0
+firebase-admin==6.2.0
+pyrebase4==4.7.1
+requests==2.32.5
