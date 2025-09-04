@@ -14,3 +14,6 @@ Werkzeug==2.3.7
 python-dotenv==1.0.0
 gunicorn==21.2.0
 email-validator==2.0.0
+firebase-admin==6.2.0
+pyrebase4==4.7.1
+requests==2.32.5

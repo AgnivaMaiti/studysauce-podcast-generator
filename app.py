@@ -8,6 +8,7 @@ import time
 import random
 import io
 import tempfile
+import json
 from datetime import datetime
 import fitz
 from pydub import AudioSegment
@@ -21,6 +22,7 @@ import threading
 from werkzeug.utils import secure_filename
 from models import db, User, Podcast
 from forms import LoginForm, RegistrationForm, ChangePasswordForm
+from firebase_config import firebase_config
 
 # Load environment variables from .env file
 load_dotenv()
@@ -513,6 +515,118 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
+
+# Firebase Google Authentication Routes
+
+
+@app.route('/auth/google')
+def google_auth():
+    """Initiate Google OAuth via Firebase"""
+    return render_template('auth/google_signin.html')
+
+
+@app.route('/auth/google/callback', methods=['POST'])
+def google_auth_callback():
+    """Handle Google OAuth callback from Firebase"""
+    try:
+        data = request.get_json()
+        id_token = data.get('idToken')
+
+        if not id_token:
+            return jsonify({'error': 'No ID token provided'}), 400
+
+        # Verify the Firebase ID token
+        decoded_token = firebase_config.verify_id_token(id_token)
+
+        if not decoded_token:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        firebase_uid = decoded_token['uid']
+        email = decoded_token.get('email')
+
+        # Get additional user info from Firebase
+        firebase_user = firebase_config.get_user_by_uid(firebase_uid)
+
+        if not firebase_user:
+            return jsonify({'error': 'User not found in Firebase'}), 404
+
+        # Check if user already exists in our database
+        user = User.query.filter_by(firebase_uid=firebase_uid).first()
+
+        if not user:
+            user = User.query.filter_by(email=email).first()
+
+            if user:
+                # Link existing account to Firebase
+                user.firebase_uid = firebase_uid
+                user.provider = 'google'
+                user.email_verified = decoded_token.get(
+                    'email_verified', False)
+                if firebase_user.photo_url:
+                    user.avatar_url = firebase_user.photo_url
+            else:
+                # Create new user from Firebase data
+                google_user_data = {
+                    'email': email,
+                    'given_name': firebase_user.display_name.split(' ')[0] if firebase_user.display_name else 'User',
+                    'family_name': ' '.join(firebase_user.display_name.split(' ')[1:]) if firebase_user.display_name and len(firebase_user.display_name.split(' ')) > 1 else 'Name',
+                    'picture': firebase_user.photo_url,
+                    'email_verified': decoded_token.get('email_verified', False),
+                    'sub': firebase_uid
+                }
+
+                user = User.create_from_google(google_user_data, firebase_uid)
+
+                # Handle duplicate username
+                base_username = user.username
+                counter = 1
+                while User.query.filter_by(username=user.username).first():
+                    user.username = f"{base_username}{counter}"
+                    counter += 1
+
+        # Update last login
+        user.last_login = datetime.utcnow()
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+
+            # Log in the user
+            login_user(user, remember=True)
+
+            return jsonify({
+                'success': True,
+                'redirect_url': url_for('index'),
+                'user': {
+                    'name': user.get_full_name(),
+                    'email': user.email,
+                    'avatar': user.get_avatar_url()
+                }
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Database error: {e}")
+            return jsonify({'error': 'Database error occurred'}), 500
+
+    except Exception as e:
+        print(f"Google auth error: {e}")
+        return jsonify({'error': 'Authentication failed'}), 500
+
+
+@app.route('/auth/firebase-config')
+def firebase_config_endpoint():
+    """Provide Firebase configuration to frontend"""
+    config = {
+        'apiKey': os.getenv('FIREBASE_API_KEY'),
+        'authDomain': os.getenv('FIREBASE_AUTH_DOMAIN'),
+        'projectId': os.getenv('FIREBASE_PROJECT_ID'),
+        'storageBucket': os.getenv('FIREBASE_STORAGE_BUCKET'),
+        'messagingSenderId': os.getenv('FIREBASE_MESSAGING_SENDER_ID'),
+        'appId': os.getenv('FIREBASE_APP_ID'),
+        'measurementId': os.getenv('FIREBASE_MEASUREMENT_ID')
+    }
+    return jsonify(config)
 
 
 @app.route('/profile')

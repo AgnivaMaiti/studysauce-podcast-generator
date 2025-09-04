@@ -185,6 +185,22 @@
         align-items: center;
         justify-content: center;
         font-weight: bold;
+        overflow: hidden;
+      }
+
+      .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .oauth-badge {
+        background: #4285f4;
+        color: white;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 10px;
+        margin-left: 0.5rem;
       }
     </style>
   </head>
@@ -195,13 +211,22 @@
         {% if current_user.is_authenticated %}
         <div class="user-info">
           <div class="user-avatar">
-            {{ current_user.first_name[0]}}{{ current_user.last_name[0] }}
+            {% if current_user.avatar_url %}
+            <img src="{{ current_user.avatar_url }}" alt="Avatar" />
+            {% else %} {{ current_user.first_name[0]}}{{
+            current_user.last_name[0] }} {% endif %}
           </div>
           <span>{{ current_user.get_full_name() }}</span>
+          {% if current_user.is_oauth_user() %}
+          <span class="oauth-badge">Google</span>
+          {% endif %}
         </div>
         <a href="{{ url_for('profile') }}">Profile</a>
         <a href="{{ url_for('logout') }}">Logout</a>
         {% else %}
+        <a href="{{ url_for('google_auth') }}" class="btn btn-primary"
+          >Sign in with Google</a
+        >
         <a href="{{ url_for('login') }}">Login</a>
         <a href="{{ url_for('register') }}">Sign Up</a>
         {% endif %}
